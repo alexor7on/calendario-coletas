@@ -1,3 +1,4 @@
+.streamlit/secrets.toml
 credenciais_google.json
 __pycache__/
 *.pyc
