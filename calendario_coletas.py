@@ -30,91 +30,82 @@ st.set_page_config(
 def aplicar_estilo_login():
     st.markdown("""
     <style>
+
+        /* REMOVE ESPAÇO DO TOPO DO STREAMLIT */
+        header {visibility: hidden;}
+        .block-container {
+            padding-top: 0rem !important;
+        }
+
         .stApp {
             background: linear-gradient(135deg, #f5f9ff 0%, #eef4ff 100%);
         }
 
+        /* CENTRALIZAÇÃO REAL */
         .login-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 80vh;
+            height: 100vh;  /* altura total da tela */
         }
 
+        /* CARD MENOR E MAIS ELEGANTE */
         .login-card {
             background: white;
-            padding: 38px 34px 30px 34px;
-            border-radius: 22px;
-            box-shadow: 0 10px 35px rgba(16, 24, 40, 0.10);
+            padding: 30px 26px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             width: 100%;
-            max-width: 440px;
+            max-width: 360px; /* 👈 menor */
             border: 1px solid rgba(0,0,0,0.05);
         }
 
         .login-top-bar {
-            height: 8px;
+            height: 6px;
             width: 100%;
             background: linear-gradient(90deg, #0A5CFF 0%, #3B82F6 100%);
             border-radius: 999px;
-            margin-bottom: 22px;
+            margin-bottom: 18px;
         }
 
         .login-title {
-            font-size: 30px;
+            font-size: 24px;
             font-weight: 800;
             color: #0f172a;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-align: center;
         }
 
         .login-subtitle {
-            font-size: 15px;
+            font-size: 13px;
             color: #475569;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
             text-align: center;
-            line-height: 1.5;
         }
 
         .login-footer {
-            margin-top: 18px;
+            margin-top: 14px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #94a3b8;
         }
 
+        /* INPUT */
         div[data-testid="stTextInput"] input {
-            border-radius: 12px !important;
-            border: 1px solid #cbd5e1 !important;
-            padding: 0.85rem 1rem !important;
-            font-size: 15px !important;
+            border-radius: 10px !important;
+            padding: 0.7rem !important;
         }
 
-        div[data-testid="stTextInput"] input:focus {
-            border: 1px solid #0A5CFF !important;
-            box-shadow: 0 0 0 3px rgba(10, 92, 255, 0.15) !important;
-        }
-
+        /* BOTÃO */
         div.stButton > button {
             width: 100%;
             background: linear-gradient(90deg, #0A5CFF 0%, #3B82F6 100%);
             color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 0.85rem 1rem;
-            font-size: 15px;
-            font-weight: 700;
-            transition: 0.2s ease;
+            border-radius: 10px;
+            padding: 0.7rem;
+            font-weight: 600;
         }
 
-        div.stButton > button:hover {
-            filter: brightness(1.05);
-            transform: translateY(-1px);
-        }
-
-        div[data-testid="stForm"] {
-            border: none !important;
-            background: transparent !important;
-        }
     </style>
     """, unsafe_allow_html=True)
 
