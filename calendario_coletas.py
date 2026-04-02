@@ -46,7 +46,7 @@ def aplicar_estilo_login():
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(16, 24, 40, 0.10);
             border: 1px solid rgba(0,0,0,0.05);
-            max-width: 420px;
+            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -140,13 +140,13 @@ def tela_login():
             unsafe_allow_html=True
         )
         st.markdown(
-            '<div class="login-subtitle">Acesse o calendário de coletas informando a senha de acesso.</div>',
+            '<div class="login-subtitle">Insira a senha para acessar o calendário de coletas. Caso não tenha a senha, entre em contato com o atendimento da Nuvem Envio.</div>',
             unsafe_allow_html=True
         )
 
         with st.form("form_login", clear_on_submit=False):
             senha_digitada = st.text_input(
-                "Senha",
+                "",
                 type="password",
                 placeholder="Digite sua senha"
             )
