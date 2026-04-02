@@ -13,6 +13,190 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
+import streamlit as st
+
+# =========================
+# CONFIGURAÇÃO DA PÁGINA
+# =========================
+st.set_page_config(
+    page_title="Calendário de Coletas",
+    page_icon="📅",
+    layout="wide"
+)
+
+# =========================
+# ESTILO DA TELA DE LOGIN
+# =========================
+def aplicar_estilo_login():
+    st.markdown("""
+    <style>
+        .stApp {
+            background: linear-gradient(135deg, #f5f9ff 0%, #eef4ff 100%);
+        }
+
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .login-card {
+            background: white;
+            padding: 38px 34px 30px 34px;
+            border-radius: 22px;
+            box-shadow: 0 10px 35px rgba(16, 24, 40, 0.10);
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .login-top-bar {
+            height: 8px;
+            width: 100%;
+            background: linear-gradient(90deg, #0A5CFF 0%, #3B82F6 100%);
+            border-radius: 999px;
+            margin-bottom: 22px;
+        }
+
+        .login-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 15px;
+            color: #475569;
+            margin-bottom: 28px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .login-footer {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        div[data-testid="stTextInput"] input {
+            border-radius: 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 0.85rem 1rem !important;
+            font-size: 15px !important;
+        }
+
+        div[data-testid="stTextInput"] input:focus {
+            border: 1px solid #0A5CFF !important;
+            box-shadow: 0 0 0 3px rgba(10, 92, 255, 0.15) !important;
+        }
+
+        div.stButton > button {
+            width: 100%;
+            background: linear-gradient(90deg, #0A5CFF 0%, #3B82F6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            font-size: 15px;
+            font-weight: 700;
+            transition: 0.2s ease;
+        }
+
+        div.stButton > button:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+
+        div[data-testid="stForm"] {
+            border: none !important;
+            background: transparent !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# =========================
+# FUNÇÃO DE LOGIN
+# =========================
+def tela_login():
+    aplicar_estilo_login()
+
+    # Inicializa estado
+    if "autenticado" not in st.session_state:
+        st.session_state["autenticado"] = False
+
+    senha_correta = st.secrets.get("APP_PASSWORD", "")
+
+    # Se já estiver logado, segue o app
+    if st.session_state["autenticado"]:
+        return True
+
+    # =========================
+    # TELA DE LOGIN
+    # =========================
+    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    st.markdown('<div class="login-top-bar"></div>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="login-title">Portal de Coletas</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="login-subtitle">Acesse o calendário de coletas informando a senha de acesso.</div>',
+        unsafe_allow_html=True
+    )
+
+    # =========================
+    # FORMULÁRIO
+    # =========================
+    with st.form("form_login", clear_on_submit=False):
+        senha_digitada = st.text_input(
+            "Senha",
+            type="password",
+            placeholder="Digite sua senha"
+        )
+
+        entrar = st.form_submit_button("Acessar")
+
+        if entrar:
+            if senha_digitada == senha_correta:
+                st.session_state["autenticado"] = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta. Tente novamente.")
+
+    st.markdown(
+        '<div class="login-footer">Acesso restrito</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Impede o restante do app de rodar
+    st.stop()
+
+tela_login()
+
+# BOTÃO DE LOGOUT
+if st.session_state.get("autenticado"):
+    with st.sidebar:
+        st.markdown("### 🔐 Acesso")
+        if st.button("Sair"):
+            st.session_state["autenticado"] = False
+            st.rerun()
+
+# =========================
+# CHAMA O LOGIN ANTES DO APP
+# =========================
+tela_login()
+
 
 def get_base64_image(path):
     with open(path, "rb") as f:
@@ -270,10 +454,8 @@ def parsear_data_coluna(coluna):
 def conectar_drive():
     scopes = ["https://www.googleapis.com/auth/drive.readonly"]
 
-    creds_dict = dict(st.secrets["gcp_service_account"])
-
     creds = Credentials.from_service_account_info(
-        creds_dict,
+        dict(st.secrets["gcp_service_account"]),
         scopes=scopes
     )
 
@@ -467,9 +649,9 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
             transition: all 0.15s ease;
         }
         .calendar-weekend {
-            background: #F3F4F6 !important;
-            color: #9CA3AF !important;
-            border: 2px solid #E5E7EB !important;
+            background: #E5E7EB !important;
+            color: #6B7280 !important;
+            border: 2px solid #6B7280 !important;
         }
         .calendar-highlight {
             background: #10B981 !important;
@@ -555,8 +737,8 @@ def altura_calendario(mes: int, ano: int) -> int:
 # =========================================================
 try:
     abas_validas = carregar_abas_drive(ID_ARQUIVO_DRIVE)
-except FileNotFoundError:
-    st.error("Não encontrei o arquivo de credenciais 'credenciais_google.json'.")
+except KeyError:
+    st.error("Credenciais não encontradas no secrets.toml. Verifique a chave 'gcp_service_account'.")
     st.stop()
 except Exception as e:
     st.error(f"Erro ao abrir a planilha: {repr(e)}")
