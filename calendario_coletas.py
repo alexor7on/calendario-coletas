@@ -30,34 +30,24 @@ st.set_page_config(
 def aplicar_estilo_login():
     st.markdown("""
     <style>
-
-        /* REMOVE ESPAÇO DO TOPO DO STREAMLIT */
         header {visibility: hidden;}
         .block-container {
-            padding-top: 0rem !important;
+            padding-top: 1.5rem !important;
+            padding-bottom: 0rem !important;
         }
 
         .stApp {
             background: linear-gradient(135deg, #f5f9ff 0%, #eef4ff 100%);
         }
 
-        /* CENTRALIZAÇÃO REAL */
-        .login-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;  /* altura total da tela */
-        }
-
-        /* CARD MENOR E MAIS ELEGANTE */
         .login-card {
             background: white;
-            padding: 30px 26px;
+            padding: 26px 22px 20px 22px;
             border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            max-width: 360px; /* 👈 menor */
+            box-shadow: 0 10px 30px rgba(16, 24, 40, 0.10);
             border: 1px solid rgba(0,0,0,0.05);
+            max-width: 420px;
+            margin: 0 auto;
         }
 
         .login-top-bar {
@@ -77,35 +67,47 @@ def aplicar_estilo_login():
         }
 
         .login-subtitle {
-            font-size: 13px;
+            font-size: 14px;
             color: #475569;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             text-align: center;
+            line-height: 1.4;
         }
 
         .login-footer {
-            margin-top: 14px;
+            margin-top: 12px;
             text-align: center;
             font-size: 11px;
             color: #94a3b8;
         }
 
-        /* INPUT */
         div[data-testid="stTextInput"] input {
             border-radius: 10px !important;
-            padding: 0.7rem !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 0.75rem 0.9rem !important;
+            font-size: 14px !important;
         }
 
-        /* BOTÃO */
+        div[data-testid="stTextInput"] input:focus {
+            border: 1px solid #0A5CFF !important;
+            box-shadow: 0 0 0 3px rgba(10, 92, 255, 0.15) !important;
+        }
+
         div.stButton > button {
             width: 100%;
             background: linear-gradient(90deg, #0A5CFF 0%, #3B82F6 100%);
             color: white;
+            border: none;
             border-radius: 10px;
-            padding: 0.7rem;
-            font-weight: 600;
+            padding: 0.75rem 0.9rem;
+            font-size: 14px;
+            font-weight: 700;
         }
 
+        div[data-testid="stForm"] {
+            border: none !important;
+            background: transparent !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -116,32 +118,54 @@ def aplicar_estilo_login():
 def tela_login():
     aplicar_estilo_login()
 
-    # Inicializa estado
     if "autenticado" not in st.session_state:
         st.session_state["autenticado"] = False
 
     senha_correta = st.secrets.get("APP_PASSWORD", "")
 
-    # Se já estiver logado, segue o app
     if st.session_state["autenticado"]:
         return True
 
-    # =========================
-    # TELA DE LOGIN
-    # =========================
-    st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    st.markdown('<div class="login-top-bar"></div>', unsafe_allow_html=True)
+    # Espaço vertical para descer/subir a caixa
+    st.markdown("<div style='height: 12vh;'></div>", unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="login-title">Portal de Coletas</div>',
-        unsafe_allow_html=True
-    )
+    # Centraliza horizontalmente
+    col_esq, col_centro, col_dir = st.columns([1.2, 1, 1.2])
 
-    st.markdown(
-        '<div class="login-subtitle">Acesse o calendário de coletas informando a senha de acesso.</div>',
-        unsafe_allow_html=True
-    )
+    with col_centro:
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown('<div class="login-top-bar"></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="login-title">Portal de Coletas</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="login-subtitle">Acesse o calendário de coletas informando a senha de acesso.</div>',
+            unsafe_allow_html=True
+        )
+
+        with st.form("form_login", clear_on_submit=False):
+            senha_digitada = st.text_input(
+                "Senha",
+                type="password",
+                placeholder="Digite sua senha"
+            )
+            entrar = st.form_submit_button("Acessar")
+
+            if entrar:
+                if senha_digitada == senha_correta:
+                    st.session_state["autenticado"] = True
+                    st.rerun()
+                else:
+                    st.error("Senha incorreta. Tente novamente.")
+
+        st.markdown(
+            '<div class="login-footer">Acesso restrito</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.stop()
 
     # =========================
     # FORMULÁRIO
