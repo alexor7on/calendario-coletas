@@ -14,6 +14,40 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 
+# Controle de login
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+def check_password():
+    senha = st.text_input(
+        "",
+        type="password",
+        placeholder="Digite a senha"
+    )
+    
+    if st.button("Entrar"):
+        if senha == st.secrets["APP_PASSWORD"]:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Senha incorreta")
+
+# Se não estiver autenticado, trava aqui
+if not st.session_state.authenticated:
+    st.title("🔒 Acesso restrito")
+    
+    st.markdown(
+        "<p style='font-size:14px; color:black;'>"
+        "Insira a senha para acessar o calendário de coletas.<br>"
+        "Caso não possua a senha, entre em contato com a equipe da Nuvem Envio."
+        "</p>",
+        unsafe_allow_html=True
+    )
+    
+    check_password()
+    st.stop()
+
+
 def get_base64_image(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
@@ -27,7 +61,7 @@ logo_base64 = get_base64_image("logo.png")
 # =========================================================
 st.set_page_config(
     page_title="Calendário de Coletas",
-    page_icon="📦",
+    page_icon="🚚",
     layout="wide"
 )
 
