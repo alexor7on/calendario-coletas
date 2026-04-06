@@ -264,11 +264,12 @@ def label_mes_ano(mes: int, ano: int) -> str:
     return f"{MESES_PT_REV[mes]} {ano}"
 
 
-def eh_x(valor) -> bool:
-    if valor is None:
+def tem_coleta(valor) -> bool:
+    if pd.isna(valor):
         return False
-    texto = normalizar_texto(valor)
-    return texto == "x"
+
+    texto = str(valor).strip()
+    return texto != ""
 
 
 def buscar_cidades(termo: str, lista_cidades: list[str]) -> list[str]:
@@ -441,7 +442,7 @@ def obter_dias_coleta(row: pd.Series, mes: int, ano: int) -> list[date]:
         if not data_col:
             continue
 
-        if data_col.month == mes and data_col.year == ano and eh_x(row[coluna]):
+        if data_col.month == mes and data_col.year == ano and tem_coleta(row[coluna]):
             if data_col.weekday() < 5:
                 dias.append(data_col)
 
