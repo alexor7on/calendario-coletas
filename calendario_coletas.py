@@ -4,6 +4,7 @@ import calendar
 import unicodedata
 import base64
 from datetime import datetime, date
+import time
 
 from streamlit_searchbox import st_searchbox
 import pandas as pd
@@ -13,10 +14,19 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
+TEMPO_MAXIMO = 600  # 10 minutos
+
 
 # Controle de login
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
+
+if "login_time" not in st.session_state:
+    st.session_state.login_time = 0
+
+if "mensagem_expirada" not in st.session_state:
+    st.session_state.mensagem_expirada = False
+
 
 def check_password():
     senha = st.text_input(
@@ -24,18 +34,32 @@ def check_password():
         type="password",
         placeholder="Digite a senha"
     )
-    
+
     if st.button("Entrar"):
         if senha == st.secrets["APP_PASSWORD"]:
             st.session_state.authenticated = True
+            st.session_state.login_time = time.time()
+            st.session_state.mensagem_expirada = False
             st.rerun()
         else:
             st.error("Senha incorreta")
 
-# Se não estiver autenticado, trava aqui
+
+# Se estiver autenticado, verifica expiração
+if st.session_state.authenticated:
+    tempo_logado = time.time() - st.session_state.login_time
+
+    if tempo_logado > TEMPO_MAXIMO:
+        st.session_state.authenticated = False
+        st.session_state.login_time = 0
+        st.session_state.mensagem_expirada = True
+        st.rerun()
+
+
+# Se não estiver autenticado, mostra login
 if not st.session_state.authenticated:
     st.title("🔒 Acesso restrito")
-    
+
     st.markdown(
         "<p style='font-size:14px; color:black;'>"
         "Insira a senha para acessar o calendário de coletas.<br>"
@@ -43,7 +67,11 @@ if not st.session_state.authenticated:
         "</p>",
         unsafe_allow_html=True
     )
-    
+
+    if st.session_state.mensagem_expirada:
+        st.warning("Sessão expirada. Faça login novamente.")
+        st.session_state.mensagem_expirada = False
+
     check_password()
     st.stop()
 
