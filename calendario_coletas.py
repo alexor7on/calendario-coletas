@@ -206,30 +206,6 @@ st.markdown("""
         position: relative;
     }
 
-    .calendar-tooltip .tooltip {
-        visibility: hidden;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-
-        position: absolute;
-        bottom: 110%;
-        left: 50%;
-        transform: translateX(-50%);
-
-        background: #111827;
-        color: white;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        white-space: nowrap;
-
-        z-index: 10;
-    }
-
-    .calendar-tooltip:hover .tooltip {
-        visibility: visible;
-        opacity: 1;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -647,19 +623,7 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
                 if data_atual == hoje:
                     classes.append("calendar-today")
 
-                nome_feriado = ""
-
-                if data_atual in feriados_br:
-                    nome_feriado = feriados_br.get(data_atual)
-
-                tooltip_html = f'<span class="tooltip">{nome_feriado}</span>' if nome_feriado else ""
-
-                html += f'''
-                <div class="{" ".join(classes)} calendar-tooltip">
-                    {dia}
-                    {tooltip_html}
-                </div>
-                '''
+                html += f'<div class="{" ".join(classes)}">{dia}</div>'
 
     html += "</div></div>"
     return html
