@@ -313,7 +313,7 @@ def buscar_cidades(termo: str, lista_cidades: list[str]) -> list[str]:
 
     resultados = [
         cidade for cidade in lista_cidades
-        if termo in normalizar_texto(cidade)
+        if normalizar_texto(cidade).startswith(termo)
     ]
 
     return resultados[:100]
