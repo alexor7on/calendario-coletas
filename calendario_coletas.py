@@ -5,7 +5,7 @@ import unicodedata
 import base64
 from datetime import datetime, date
 import time
-
+import holidays
 from streamlit_searchbox import st_searchbox
 import pandas as pd
 import streamlit as st
@@ -559,6 +559,11 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
             border: 2px solid #059669 !important;
             box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25);
         }
+        .calendar-holiday {
+            background: #EF4444 !important;
+            color: white !important;
+            border: 2px solid #DC2626 !important;
+        }
         .calendar-today {
             border: 3px solid #1A73E8 !important;
             box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
@@ -600,10 +605,17 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
                 if j in [0, 6]:
                     classes.append("calendar-weekend")
 
+                # coleta (verde)
                 if dia in dias_destacados:
                     classes.append("calendar-highlight")
 
-                if date(ano, mes, dia) == hoje:
+                # feriado (vermelho)
+                data_atual = date(ano, mes, dia)
+                if data_atual in feriados_br:
+                    classes.append("calendar-holiday")
+
+                # hoje (borda azul)
+                if data_atual == hoje:
                     classes.append("calendar-today")
 
                 html += f'<div class="{" ".join(classes)}">{dia}</div>'
@@ -667,6 +679,8 @@ with col_f1:
         options=["SP", "MG"],
         horizontal=True
     )
+
+feriados_br = holidays.country_holidays("BR", subdiv=estado)
 
 opcoes_estado = [aba for aba in abas_validas if aba["estado"] == estado]
 
