@@ -560,9 +560,9 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
             box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25);
         }
         .calendar-holiday {
-            background: #EF4444 !important;
-            color: white !important;
-            border: 2px solid #DC2626 !important;
+            background: #FEE2E2 !important;  /* vermelho bem claro (rosinha) */
+            color: #991B1B !important;       /* texto vermelho escuro */
+            border: 2px solid #FCA5A5 !important;
         }
         .calendar-today {
             border: 3px solid #1A73E8 !important;
@@ -806,28 +806,6 @@ if cidade_escolhida:
             )
 
             st.code(texto_copiavel, language=None)
-
-            # Feriados do mês
-            feriados_do_mes = []
-
-            for data_feriado, nome_feriado in feriados_br.items():
-                if data_feriado.month == aba_escolhida["mes"] and data_feriado.year == aba_escolhida["ano"]:
-                    feriados_do_mes.append((data_feriado, nome_feriado))
-
-            feriados_do_mes = sorted(feriados_do_mes, key=lambda x: x[0])
-
-            if feriados_do_mes:
-                st.markdown("### 🏖️ Feriados")
-
-                html_feriados = ""
-                for data_feriado, nome_feriado in feriados_do_mes:
-                    html_feriados += (
-                        f"<div style='color:#DC2626; font-weight:600; margin-bottom:6px;'>"
-                        f"{data_feriado.strftime('%d/%m')} - {nome_feriado}"
-                        f"</div>"
-                    )
-
-                st.markdown(html_feriados, unsafe_allow_html=True)
 
         else:
             st.warning("Não há coletas marcadas para essa cidade neste mês.")
