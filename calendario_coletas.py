@@ -53,6 +53,11 @@ if st.session_state.authenticated:
         st.session_state.authenticated = False
         st.session_state.login_time = 0
         st.session_state.mensagem_expirada = True
+
+        # limpa caches para evitar conexão velha/quebrada
+        st.cache_data.clear()
+        st.cache_resource.clear()
+
         st.rerun()
 
 
@@ -346,17 +351,31 @@ def conectar_drive():
 
 @st.cache_data(show_spinner=False, ttl=3600)
 def baixar_excel_drive(id_arquivo: str) -> bytes:
-    service = conectar_drive()
-    request = service.files().get_media(fileId=id_arquivo)
+    ultima_excecao = None
 
-    buffer = io.BytesIO()
-    downloader = MediaIoBaseDownload(buffer, request)
+    for tentativa in range(3):
+        try:
+            service = conectar_drive()
+            request = service.files().get_media(fileId=id_arquivo)
 
-    concluido = False
-    while not concluido:
-        _, concluido = downloader.next_chunk()
+            buffer = io.BytesIO()
+            downloader = MediaIoBaseDownload(buffer, request)
 
-    return buffer.getvalue()
+            concluido = False
+            while not concluido:
+                _, concluido = downloader.next_chunk()
+
+            return buffer.getvalue()
+
+        except Exception as e:
+            ultima_excecao = e
+
+            # limpa caches e tenta reconstruir a conexão
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            time.sleep(1)
+
+    raise ultima_excecao
 
 
 @st.cache_data(show_spinner=False, ttl=3600)
