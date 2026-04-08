@@ -807,6 +807,28 @@ if cidade_escolhida:
 
             st.code(texto_copiavel, language=None)
 
+            # Feriados do mês
+            feriados_do_mes = []
+
+            for data_feriado, nome_feriado in feriados_br.items():
+                if data_feriado.month == aba_escolhida["mes"] and data_feriado.year == aba_escolhida["ano"]:
+                    feriados_do_mes.append((data_feriado, nome_feriado))
+
+            feriados_do_mes = sorted(feriados_do_mes, key=lambda x: x[0])
+
+            if feriados_do_mes:
+                st.markdown("### 🏖️ Feriados")
+
+                html_feriados = ""
+                for data_feriado, nome_feriado in feriados_do_mes:
+                    html_feriados += (
+                        f"<div style='color:#DC2626; font-weight:600; margin-bottom:6px;'>"
+                        f"{data_feriado.strftime('%d/%m')} - {nome_feriado}"
+                        f"</div>"
+                    )
+
+                st.markdown(html_feriados, unsafe_allow_html=True)
+
         else:
             st.warning("Não há coletas marcadas para essa cidade neste mês.")
 
