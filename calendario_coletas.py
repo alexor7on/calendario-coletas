@@ -618,7 +618,14 @@ def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
                 if data_atual == hoje:
                     classes.append("calendar-today")
 
-                html += f'<div class="{" ".join(classes)}">{dia}</div>'
+                nome_feriado = ""
+
+                if data_atual in feriados_br:
+                    nome_feriado = feriados_br.get(data_atual)
+
+                titulo = f'title="{nome_feriado}"' if nome_feriado else ""
+
+                html += f'<div class="{" ".join(classes)}" {titulo}>{dia}</div>'
 
     html += "</div></div>"
     return html
