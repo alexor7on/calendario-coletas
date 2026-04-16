@@ -67,7 +67,7 @@ if not st.session_state.authenticated:
     st.markdown(
         "<p style='font-size:14px; color:black;'>"
         "Insira a senha para acessar o calendário de coletas.<br>"
-        "Caso não possua a senha, entre em contato com a equipe da Nuvem Envio."
+        "Caso não possua a senha, entre em contato com a equipe da Nuvem Envio / Mandaê."
         "</p>",
         unsafe_allow_html=True
     )
