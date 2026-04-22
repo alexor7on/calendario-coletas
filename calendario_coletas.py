@@ -53,11 +53,17 @@ if st.session_state.authenticated:
         st.session_state.login_time = 0
         st.session_state.mensagem_expirada = True
 
-        # limpa caches para evitar conexão velha/quebrada
+        if "cidade_searchbox" in st.session_state:
+            del st.session_state["cidade_searchbox"]
+
+        if "ultimo_log" in st.session_state:
+            st.session_state.ultimo_log = None
+
         st.cache_data.clear()
         st.cache_resource.clear()
 
-        st.rerun()
+        # NÃO usa st.rerun() aqui
+        # deixa o fluxo seguir naturalmente para a tela de login
 
 
 # Se não estiver autenticado, mostra login
