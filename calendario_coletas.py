@@ -359,7 +359,7 @@ def conectar_drive():
     return service
 
 
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_data(show_spinner="Carregando base...", ttl=3600)
 def baixar_excel_drive(id_arquivo: str) -> bytes:
     ultima_excecao = None
 
@@ -388,7 +388,7 @@ def baixar_excel_drive(id_arquivo: str) -> bytes:
     raise ultima_excecao
 
 
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_data(show_spinner="Carregando base...", ttl=3600)
 def carregar_abas_drive(id_arquivo: str):
     excel_bytes = baixar_excel_drive(id_arquivo)
     excel = pd.ExcelFile(io.BytesIO(excel_bytes))
@@ -413,7 +413,7 @@ def carregar_abas_drive(id_arquivo: str):
     return abas_validas
 
 
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_data(show_spinner="Abrindo calendário...", ttl=3600)
 def ler_aba_drive(id_arquivo: str, nome_aba: str) -> pd.DataFrame:
     excel_bytes = baixar_excel_drive(id_arquivo)
 
