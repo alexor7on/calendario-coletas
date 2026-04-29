@@ -5,3 +5,4 @@ streamlit-searchbox
 google-auth
 google-api-python-client
 holidays
+gspread

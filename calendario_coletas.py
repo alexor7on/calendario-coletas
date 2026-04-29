@@ -26,6 +26,9 @@ if "login_time" not in st.session_state:
 if "mensagem_expirada" not in st.session_state:
     st.session_state.mensagem_expirada = False
 
+if "ultimo_log" not in st.session_state:
+    st.session_state.ultimo_log = None
+
 
 def check_password():
     senha = st.text_input(
@@ -267,6 +270,42 @@ MESES_PT_REV = {
 # =========================================================
 # FUNÇÕES AUXILIARES
 # =========================================================
+
+@st.cache_resource
+def conectar_gspread():
+    import gspread
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds_dict = dict(st.secrets["gcp_service_account"])
+
+    creds = Credentials.from_service_account_info(
+        creds_dict,
+        scopes=scopes
+    )
+
+    return gspread.authorize(creds)
+
+
+def registrar_log_acesso(cidade: str, estado: str, mes_label: str, nome_aba: str):
+    gc = conectar_gspread()
+
+    planilha = gc.open("logs_calendario_coletas")
+    aba = planilha.sheet1
+
+    agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    aba.append_row([
+        agora,
+        cidade,
+        estado,
+        mes_label,
+        nome_aba
+    ], value_input_option="USER_ENTERED")
+
 def normalizar_texto(texto: str) -> str:
     if texto is None:
         return ""
@@ -765,6 +804,20 @@ if cidade_escolhida:
     if row is None:
         st.error("Não foi possível localizar a linha da cidade na planilha.")
         st.stop()
+
+    chave_log = f"{cidade_escolhida}|{estado}|{mes_escolhido_label}"
+
+    if st.session_state.ultimo_log != chave_log:
+        try:
+            registrar_log_acesso(
+                cidade=cidade_escolhida,
+                estado=estado,
+                mes_label=mes_escolhido_label,
+                nome_aba=aba_escolhida["sheet_name"]
+            )
+            st.session_state.ultimo_log = chave_log
+        except Exception:
+            pass
 
     dias_datas = obter_dias_coleta(
         row=row,
