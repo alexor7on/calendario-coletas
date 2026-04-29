@@ -506,6 +506,44 @@ def obter_dias_coleta(row: pd.Series, mes: int, ano: int) -> list[date]:
     dias = sorted(set(dias))
     return dias
 
+def buscar_proxima_coleta_real(cidade_escolhida: str, estado: str, abas_validas: list[dict]):
+    hoje = datetime.now().date()
+
+    abas_estado = [
+        aba for aba in abas_validas
+        if aba["estado"] == estado and aba["ordem"] >= hoje.year * 100 + hoje.month
+    ]
+
+    abas_estado = sorted(abas_estado, key=lambda x: x["ordem"])[:2]
+
+    for aba in abas_estado:
+        df_temp = ler_aba_drive(ID_ARQUIVO_DRIVE, aba["sheet_name"])
+        coluna_cidade_temp = obter_coluna_cidade(df_temp)
+
+        if not coluna_cidade_temp:
+            continue
+
+        row_temp = encontrar_linha_cidade(
+            df_temp,
+            coluna_cidade_temp,
+            cidade_escolhida
+        )
+
+        if row_temp is None:
+            continue
+
+        dias_temp = obter_dias_coleta(
+            row=row_temp,
+            mes=aba["mes"],
+            ano=aba["ano"]
+        )
+
+        dias_futuros = [d for d in dias_temp if d >= hoje]
+
+        if dias_futuros:
+            return sorted(dias_futuros)[0]
+
+    return None
 
 def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
     cal = calendar.Calendar(firstweekday=6)
@@ -769,12 +807,13 @@ if cidade_escolhida:
 
             hoje = datetime.now().date()
 
-            tem_coleta_hoje = hoje in dias_datas
+            proxima = buscar_proxima_coleta_real(
+                cidade_escolhida=cidade_escolhida,
+                estado=estado,
+                abas_validas=abas_validas
+            )
 
-            # Encontrar próxima coleta futura (>= hoje)
-            proximas_futuras = [d for d in dias_datas if d >= hoje]
-
-            proxima = proximas_futuras[0] if proximas_futuras else None
+            tem_coleta_hoje = proxima == hoje
 
             if tem_coleta_hoje:
                 texto = "📅 Hoje: Tem coleta"
