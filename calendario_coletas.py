@@ -545,6 +545,33 @@ def obter_dias_coleta(row: pd.Series, mes: int, ano: int) -> list[date]:
     dias = sorted(set(dias))
     return dias
 
+def obter_horario_coleta(row: pd.Series, data_busca: date) -> str:
+    for coluna in row.index:
+        data_col = parsear_data_coluna(coluna)
+
+        if data_col == data_busca:
+            valor = row[coluna]
+
+            if pd.isna(valor):
+                return ""
+
+            # Se for datetime/time, formata para HH:MM
+            if hasattr(valor, "strftime"):
+                return valor.strftime("%H:%M")
+
+            texto = str(valor).strip()
+
+            # Se for "X", não retorna nada
+            if normalizar_texto(texto) == "x":
+                return ""
+
+            # Se vier como horário simples com segundos: 10:00:00 -> 10:00
+            texto = re.sub(r"\b(\d{1,2}:\d{2}):00\b", r"\1", texto)
+
+            return texto
+
+    return ""
+
 def buscar_proxima_coleta_real(cidade_escolhida: str, estado: str, abas_validas: list[dict]):
     hoje = datetime.now().date()
 
@@ -888,10 +915,21 @@ if cidade_escolhida:
             # Lista completa
             st.markdown("### 📋 Lista completa")
 
-            texto_copiavel = "\n".join(
-                f"{d.strftime('%d/%m')} - {dia_semana_pt(d)}"
-                for d in dias_datas
-            )
+            linhas_lista = []
+
+            for d in dias_datas:
+                horario = obter_horario_coleta(row, d)
+
+                if horario:
+                    linhas_lista.append(
+                        f"{d.strftime('%d/%m')} - {dia_semana_pt(d)} - {horario}"
+                    )
+                else:
+                    linhas_lista.append(
+                        f"{d.strftime('%d/%m')} - {dia_semana_pt(d)}"
+                    )
+
+            texto_copiavel = "\n".join(linhas_lista)
 
             st.code(texto_copiavel, language=None)
 
