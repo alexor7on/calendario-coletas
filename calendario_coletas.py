@@ -400,6 +400,55 @@ def conectar_drive():
     return service
 
 
+@st.cache_data(show_spinner="Atualizando planilha de SC...", ttl=3600)
+def baixar_planilha_sc() -> bytes:
+    """Baixa a planilha de SC com conexão independente e cache de 60 minutos."""
+    ultima_excecao = None
+
+    for tentativa in range(3):
+        service = None
+        try:
+            creds = Credentials.from_service_account_info(
+                dict(st.secrets["gcp_service_account"]),
+                scopes=["https://www.googleapis.com/auth/drive.readonly"]
+            )
+            service = build(
+                "drive", "v3", credentials=creds,
+                cache_discovery=False
+            )
+
+            metadata = service.files().get(
+                fileId=ID_ARQUIVO_SC,
+                fields="mimeType"
+            ).execute()
+
+            if metadata["mimeType"] == "application/vnd.google-apps.spreadsheet":
+                excel_bytes = service.files().export_media(
+                    fileId=ID_ARQUIVO_SC,
+                    mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ).execute()
+            else:
+                request = service.files().get_media(fileId=ID_ARQUIVO_SC)
+                buffer = io.BytesIO()
+                downloader = MediaIoBaseDownload(buffer, request)
+                concluido = False
+                while not concluido:
+                    _, concluido = downloader.next_chunk()
+                excel_bytes = buffer.getvalue()
+
+            return excel_bytes
+
+        except Exception as e:
+            ultima_excecao = e
+            if tentativa < 2:
+                time.sleep(tentativa + 1)
+        finally:
+            if service is not None:
+                service.close()
+
+    raise ultima_excecao
+
+
 @st.cache_data(show_spinner="Carregando base...", ttl=3600)
 def baixar_excel_drive(id_arquivo: str) -> bytes:
     ultima_excecao = None
@@ -456,23 +505,9 @@ def carregar_abas_drive(id_arquivo: str):
 
 @st.cache_data(show_spinner="Carregando meses de SC...", ttl=3600)
 def carregar_abas_sc():
-    service = conectar_drive()
-
-    # Verifica se o arquivo é um Google Sheets ou Excel
-    metadata = service.files().get(
-        fileId=ID_ARQUIVO_SC,
-        fields="mimeType"
-    ).execute()
-
-    if metadata["mimeType"] == "application/vnd.google-apps.spreadsheet":
-        excel_bytes = service.files().export_media(
-            fileId=ID_ARQUIVO_SC,
-            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ).execute()
-    else:
-        excel_bytes = baixar_excel_drive(ID_ARQUIVO_SC)
-
+    excel_bytes = baixar_planilha_sc()
     excel = pd.ExcelFile(io.BytesIO(excel_bytes))
+
     abas_sc = []
 
     for nome_aba in excel.sheet_names:
@@ -554,21 +589,7 @@ def ler_aba_drive(id_arquivo: str, nome_aba: str) -> pd.DataFrame:
 
 @st.cache_data(show_spinner="Carregando coletas de SC...", ttl=3600)
 def ler_aba_sc(nome_aba: str) -> pd.DataFrame:
-
-    service = conectar_drive()
-
-    metadata = service.files().get(
-        fileId=ID_ARQUIVO_SC,
-        fields="mimeType"
-    ).execute()
-
-    if metadata["mimeType"] == "application/vnd.google-apps.spreadsheet":
-        excel_bytes = service.files().export_media(
-            fileId=ID_ARQUIVO_SC,
-            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ).execute()
-    else:
-        excel_bytes = baixar_excel_drive(ID_ARQUIVO_SC)
+    excel_bytes = baixar_planilha_sc()
 
     bruto = pd.read_excel(
         io.BytesIO(excel_bytes),
