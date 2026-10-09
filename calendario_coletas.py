@@ -236,6 +236,8 @@ st.markdown(f"""
 # =========================================================
 ID_ARQUIVO_DRIVE = "1Kzyi1kv0Jq7SahKFfy_jUohKTm1XphGA"
 
+ID_ARQUIVO_SC = "1MQ4DhPNLJxSm2ZPmRzNQEhQTT6PYTtYm"
+
 MESES_PT = {
     "janeiro": 1,
     "fevereiro": 2,
