@@ -1101,6 +1101,27 @@ if st.query_params.get("teste_sc") == "1":
     st.stop()
 
 
+# =========================================================
+# PRÉVIA DA INTEGRAÇÃO - SANTA CATARINA
+# =========================================================
+modo_previa_sc = st.query_params.get("preview_sc") == "1"
+
+if modo_previa_sc:
+    try:
+        abas_sc = carregar_abas_sc()
+
+        abas_validas = sorted(
+            abas_validas + abas_sc,
+            key=lambda aba: aba["ordem"]
+        )
+
+        st.info("🧪 Modo de testes: Santa Catarina habilitada.")
+
+    except Exception as e:
+        st.error(f"Erro ao carregar Santa Catarina: {e}")
+        st.code(traceback.format_exc())
+        st.stop()
+
 
 # =========================================================
 # FILTROS PRINCIPAIS
@@ -1116,7 +1137,7 @@ col_f1, col_f2, col_f3 = st.columns([1, 1, 2])
 with col_f1:
     estado = st.radio(
         "Estado",
-        options=["SP", "MG"],
+        options=["SP", "MG", "SC"] if modo_previa_sc else ["SP", "MG"],
         horizontal=True
     )
 
@@ -1138,11 +1159,20 @@ with col_f2:
 
 aba_escolhida = next(item for item in opcoes_estado if item["label"] == mes_escolhido_label)
 
+
 try:
-    df = ler_aba_drive(ID_ARQUIVO_DRIVE, aba_escolhida["sheet_name"])
+    if estado == "SC":
+        df = ler_aba_sc(aba_escolhida["sheet_name"])
+    else:
+        df = ler_aba_drive(
+            ID_ARQUIVO_DRIVE,
+            aba_escolhida["sheet_name"]
+        )
+
 except Exception as e:
     st.error(f"Erro ao ler a aba '{aba_escolhida['sheet_name']}': {e}")
     st.stop()
+
 
 coluna_cidade = obter_coluna_cidade(df)
 if not coluna_cidade:
@@ -1151,13 +1181,19 @@ if not coluna_cidade:
 
 cidades = preparar_cidades(df, coluna_cidade)
 
+
 with col_f3:
     cidade_escolhida = st_searchbox(
         lambda termo: buscar_cidades(termo, cidades),
         label="Cidade",
         placeholder="Digite o nome da cidade...",
-        key="cidade_searchbox"
+        key=(
+            f"cidade_searchbox_{estado}_{aba_escolhida['ordem']}"
+            if modo_previa_sc
+            else "cidade_searchbox"
+        )
     )
+
 
 
 # =========================================================
@@ -1172,7 +1208,7 @@ if cidade_escolhida:
 
     chave_log = f"{cidade_escolhida}|{estado}|{mes_escolhido_label}"
 
-    if st.session_state.ultimo_log != chave_log:
+    if not modo_previa_sc and st.session_state.ultimo_log != chave_log:
         try:
             registrar_log_acesso(
                 cidade=cidade_escolhida,
@@ -1184,11 +1220,20 @@ if cidade_escolhida:
         except Exception:
             pass
 
-    dias_datas = obter_dias_coleta(
-        row=row,
-        mes=aba_escolhida["mes"],
-        ano=aba_escolhida["ano"]
-    )
+
+    if estado == "SC":
+        dias_datas = obter_dias_coleta_sc(
+            row=row,
+            mes=aba_escolhida["mes"],
+            ano=aba_escolhida["ano"]
+        )
+    else:
+        dias_datas = obter_dias_coleta(
+            row=row,
+            mes=aba_escolhida["mes"],
+            ano=aba_escolhida["ano"]
+        )
+
 
     dias_numeros = [d.day for d in dias_datas]
 
