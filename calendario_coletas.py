@@ -552,6 +552,58 @@ def ler_aba_drive(id_arquivo: str, nome_aba: str) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(show_spinner="Carregando coletas de SC...", ttl=3600)
+def ler_aba_sc(nome_aba: str) -> pd.DataFrame:
+
+    service = conectar_drive()
+
+    metadata = service.files().get(
+        fileId=ID_ARQUIVO_SC,
+        fields="mimeType"
+    ).execute()
+
+    if metadata["mimeType"] == "application/vnd.google-apps.spreadsheet":
+        excel_bytes = service.files().export_media(
+            fileId=ID_ARQUIVO_SC,
+            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ).execute()
+    else:
+        excel_bytes = baixar_excel_drive(ID_ARQUIVO_SC)
+
+    bruto = pd.read_excel(
+        io.BytesIO(excel_bytes),
+        sheet_name=nome_aba,
+        header=None
+    )
+
+    bruto = bruto.dropna(axis=1, how="all")
+
+    linha_datas = bruto.iloc[0]
+    linha_cabecalho = bruto.iloc[1]
+
+    colunas = []
+
+    for i in range(len(bruto.columns)):
+        valor_cab = linha_cabecalho.iloc[i]
+        valor_data = linha_datas.iloc[i]
+
+        if pd.notna(valor_cab) and str(valor_cab).strip():
+            colunas.append(str(valor_cab).strip())
+
+        elif pd.notna(valor_data) and str(valor_data).strip():
+            colunas.append(str(valor_data).strip())
+
+        else:
+            colunas.append(f"COL_{i}")
+
+    df = bruto.iloc[2:].copy()
+    df.columns = colunas
+
+    df = df.dropna(axis=0, how="all").reset_index(drop=True)
+
+    return df
+
+
 def obter_coluna_cidade(df: pd.DataFrame):
     for col in df.columns:
         if normalizar_texto(col) == "cidade":
@@ -830,6 +882,7 @@ if not abas_validas:
     st.stop()
 
 
+
 # =========================================================
 # TESTE DE CONEXÃO - SANTA CATARINA
 # =========================================================
@@ -842,18 +895,60 @@ if st.query_params.get("teste_sc") == "1":
         if abas_sc_teste:
             st.success("Conexão com a planilha de SC realizada com sucesso!")
 
+            # Mostra os meses encontrados
             for aba in abas_sc_teste:
                 st.write(
                     f"✅ {aba['label']} - Aba: {aba['sheet_name']}"
                 )
+
+            st.divider()
+
+            # Teste de leitura das cidades
+            ultima_aba = abas_sc_teste[-1]
+
+            st.subheader(
+                f"📍 Cidades encontradas - {ultima_aba['label']}"
+            )
+
+            df_sc_teste = ler_aba_sc(
+                ultima_aba["sheet_name"]
+            )
+
+            coluna_cidade_sc = obter_coluna_cidade(df_sc_teste)
+
+            if coluna_cidade_sc:
+                cidades_sc = preparar_cidades(
+                    df_sc_teste,
+                    coluna_cidade_sc
+                )
+
+                st.success(
+                    f"{len(cidades_sc)} cidades encontradas em {ultima_aba['label']}!"
+                )
+
+                st.write("Primeiras 10 cidades:")
+                st.write(cidades_sc[:10])
+
+                st.write("Exemplo dos dados da planilha:")
+                st.dataframe(
+                    df_sc_teste.iloc[:5, :8],
+                    use_container_width=True
+                )
+
+            else:
+                st.error("Coluna CIDADE não encontrada em SC.")
+
         else:
-            st.warning("Conexão realizada, mas nenhuma aba válida foi encontrada.")
+            st.warning(
+                "Conexão realizada, mas nenhuma aba válida foi encontrada."
+            )
 
     except Exception as e:
         st.error(f"Erro na conexão com SC: {e}")
         st.code(traceback.format_exc())
 
     st.stop()
+
 
 
 # =========================================================
