@@ -982,7 +982,11 @@ if st.query_params.get("teste_sc") == "1":
                 )
                 
                 # Teste das datas de coleta de SC
-                cidade_teste = cidades_sc[0]
+                cidade_teste = st.selectbox(
+                    "Selecione uma cidade para testar:",
+                    options=cidades_sc,
+                    key="cidade_teste_sc"
+                )
 
                 row_teste = encontrar_linha_cidade(
                     df_sc_teste,
