@@ -1002,6 +1002,30 @@ if st.query_params.get("teste_sc") == "1":
                     st.write(
                         f"✅ {dia.strftime('%d/%m/%Y')} - {dia_semana_pt(dia)}"
                     )
+                    
+                # Prévia visual do calendário de SC
+                st.divider()
+                st.subheader(f"📅 Calendário de {cidade_teste} - SC")
+
+                dias_numeros_sc = [dia.day for dia in dias_teste]
+
+                calendario_sc_html = html_calendario(
+                    mes=ultima_aba["mes"],
+                    ano=ultima_aba["ano"],
+                    dias_destacados=dias_numeros_sc
+                )
+
+                altura_sc = altura_calendario(
+                    ultima_aba["mes"],
+                    ultima_aba["ano"]
+                )
+
+                st.components.v1.html(
+                    calendario_sc_html,
+                    height=altura_sc,
+                    scrolling=False
+                )
+
 
 
             else:
