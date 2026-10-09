@@ -831,6 +831,32 @@ if not abas_validas:
 
 
 # =========================================================
+# TESTE DE CONEXÃO - SANTA CATARINA
+# =========================================================
+if st.query_params.get("teste_sc") == "1":
+    st.subheader("🧪 Teste de conexão - Santa Catarina")
+
+    try:
+        abas_sc_teste = carregar_abas_sc()
+
+        if abas_sc_teste:
+            st.success("Conexão com a planilha de SC realizada com sucesso!")
+
+            for aba in abas_sc_teste:
+                st.write(
+                    f"✅ {aba['label']} - Aba: {aba['sheet_name']}"
+                )
+        else:
+            st.warning("Conexão realizada, mas nenhuma aba válida foi encontrada.")
+
+    except Exception as e:
+        st.error(f"Erro na conexão com SC: {e}")
+        st.code(traceback.format_exc())
+
+    st.stop()
+
+
+# =========================================================
 # FILTROS PRINCIPAIS
 # =========================================================
 st.markdown("""
