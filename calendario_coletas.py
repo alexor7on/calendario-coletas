@@ -1101,26 +1101,24 @@ if st.query_params.get("teste_sc") == "1":
     st.stop()
 
 
+
 # =========================================================
-# PRÉVIA DA INTEGRAÇÃO - SANTA CATARINA
+# INTEGRAÇÃO OFICIAL - SANTA CATARINA
 # =========================================================
-modo_previa_sc = st.query_params.get("preview_sc") == "1"
+try:
+    abas_sc = carregar_abas_sc()
 
-if modo_previa_sc:
-    try:
-        abas_sc = carregar_abas_sc()
+    abas_validas = sorted(
+        abas_validas + abas_sc,
+        key=lambda aba: aba["ordem"]
+    )
 
-        abas_validas = sorted(
-            abas_validas + abas_sc,
-            key=lambda aba: aba["ordem"]
-        )
+except Exception as e:
+    st.warning(
+        "O calendário de Santa Catarina está temporariamente indisponível. "
+        "As consultas de SP e MG continuam funcionando."
+    )
 
-        st.info("🧪 Modo de testes: Santa Catarina habilitada.")
-
-    except Exception as e:
-        st.error(f"Erro ao carregar Santa Catarina: {e}")
-        st.code(traceback.format_exc())
-        st.stop()
 
 
 # =========================================================
@@ -1137,7 +1135,7 @@ col_f1, col_f2, col_f3 = st.columns([1, 1, 2])
 with col_f1:
     estado = st.radio(
         "Estado",
-        options=["SP", "MG", "SC"] if modo_previa_sc else ["SP", "MG"],
+        options=["SP", "MG", "SC"],
         horizontal=True
     )
 
@@ -1182,17 +1180,15 @@ if not coluna_cidade:
 cidades = preparar_cidades(df, coluna_cidade)
 
 
+
 with col_f3:
     cidade_escolhida = st_searchbox(
         lambda termo: buscar_cidades(termo, cidades),
         label="Cidade",
         placeholder="Digite o nome da cidade...",
-        key=(
-            f"cidade_searchbox_{estado}_{aba_escolhida['ordem']}"
-            if modo_previa_sc
-            else "cidade_searchbox"
-        )
+        key=f"cidade_searchbox_{estado}_{aba_escolhida['ordem']}"
     )
+
 
 
 
@@ -1208,7 +1204,7 @@ if cidade_escolhida:
 
     chave_log = f"{cidade_escolhida}|{estado}|{mes_escolhido_label}"
 
-    if not modo_previa_sc and st.session_state.ultimo_log != chave_log:
+    if st.session_state.ultimo_log != chave_log:
         try:
             registrar_log_acesso(
                 cidade=cidade_escolhida,
