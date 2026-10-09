@@ -1034,6 +1034,33 @@ if st.query_params.get("teste_sc") == "1":
                         f"✅ {dia.strftime('%d/%m/%Y')} - {dia_semana_pt(dia)}"
                     )
                     
+                # Teste da próxima coleta de Santa Catarina
+                st.divider()
+                st.subheader("🔎 Verificação da próxima coleta")
+
+                proxima_sc = buscar_proxima_coleta_real(
+                    cidade_escolhida=cidade_teste,
+                    estado="SC",
+                    abas_validas=abas_sc_teste
+                )
+
+                hoje_sc = datetime.now().date()
+
+                if proxima_sc == hoje_sc:
+                    st.success("📅 Hoje tem coleta!")
+
+                elif proxima_sc:
+                    st.success(
+                        f"Próxima coleta: {proxima_sc.strftime('%d/%m/%Y')} "
+                        f"({dia_semana_pt(proxima_sc)})"
+                    )
+
+                else:
+                    st.warning(
+                        "Nenhuma próxima coleta encontrada nos dois meses consultados."
+                    )
+
+                    
                 # Prévia visual do calendário de SC
                 st.divider()
                 st.subheader(f"📅 Calendário de {cidade_teste} - SC")
