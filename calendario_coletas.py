@@ -454,6 +454,70 @@ def carregar_abas_drive(id_arquivo: str):
     return abas_validas
 
 
+@st.cache_data(show_spinner="Carregando meses de SC...", ttl=3600)
+def carregar_abas_sc():
+    service = conectar_drive()
+
+    # Verifica se o arquivo é um Google Sheets ou Excel
+    metadata = service.files().get(
+        fileId=ID_ARQUIVO_SC,
+        fields="mimeType"
+    ).execute()
+
+    if metadata["mimeType"] == "application/vnd.google-apps.spreadsheet":
+        excel_bytes = service.files().export_media(
+            fileId=ID_ARQUIVO_SC,
+            mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ).execute()
+    else:
+        excel_bytes = baixar_excel_drive(ID_ARQUIVO_SC)
+
+    excel = pd.ExcelFile(io.BytesIO(excel_bytes))
+    abas_sc = []
+
+    for nome_aba in excel.sheet_names:
+        mes, _ = extrair_mes_ano_da_aba(nome_aba)
+
+        if not mes:
+            continue
+
+        primeira_linha = pd.read_excel(
+            excel,
+            sheet_name=nome_aba,
+            header=None,
+            nrows=1
+        ).iloc[0]
+
+        datas = [
+            parsear_data_coluna(valor)
+            for valor in primeira_linha
+        ]
+
+        anos = [
+            data.year
+            for data in datas
+            if data and data.month == mes
+        ]
+
+        if not anos:
+            continue
+
+        ano = max(set(anos), key=anos.count)
+
+        abas_sc.append({
+            "sheet_name": nome_aba,
+            "estado": "SC",
+            "mes": mes,
+            "ano": ano,
+            "label": label_mes_ano(mes, ano),
+            "ordem": ano * 100 + mes,
+            "file_id": ID_ARQUIVO_SC
+        })
+
+    return sorted(abas_sc, key=lambda x: x["ordem"])
+
+
+
 @st.cache_data(show_spinner="Abrindo calendário...", ttl=3600)
 def ler_aba_drive(id_arquivo: str, nome_aba: str) -> pd.DataFrame:
     excel_bytes = baixar_excel_drive(id_arquivo)
