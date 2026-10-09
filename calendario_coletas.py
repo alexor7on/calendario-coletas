@@ -736,18 +736,33 @@ def obter_horario_coleta(row: pd.Series, data_busca: date) -> str:
 
     return ""
 
+
 def buscar_proxima_coleta_real(cidade_escolhida: str, estado: str, abas_validas: list[dict]):
     hoje = datetime.now().date()
 
     abas_estado = [
         aba for aba in abas_validas
-        if aba["estado"] == estado and aba["ordem"] >= hoje.year * 100 + hoje.month
+        if aba["estado"] == estado
+        and aba["ordem"] >= hoje.year * 100 + hoje.month
     ]
 
-    abas_estado = sorted(abas_estado, key=lambda x: x["ordem"])[:2]
+    abas_estado = sorted(
+        abas_estado,
+        key=lambda x: x["ordem"]
+    )[:2]
 
     for aba in abas_estado:
-        df_temp = ler_aba_drive(ID_ARQUIVO_DRIVE, aba["sheet_name"])
+
+        # Santa Catarina utiliza sua própria planilha
+        if estado == "SC":
+            df_temp = ler_aba_sc(aba["sheet_name"])
+        else:
+            # SP e MG continuam utilizando a planilha original
+            df_temp = ler_aba_drive(
+                ID_ARQUIVO_DRIVE,
+                aba["sheet_name"]
+            )
+
         coluna_cidade_temp = obter_coluna_cidade(df_temp)
 
         if not coluna_cidade_temp:
@@ -762,18 +777,30 @@ def buscar_proxima_coleta_real(cidade_escolhida: str, estado: str, abas_validas:
         if row_temp is None:
             continue
 
-        dias_temp = obter_dias_coleta(
-            row=row_temp,
-            mes=aba["mes"],
-            ano=aba["ano"]
-        )
+        # Cada planilha utiliza sua regra de identificação
+        if estado == "SC":
+            dias_temp = obter_dias_coleta_sc(
+                row=row_temp,
+                mes=aba["mes"],
+                ano=aba["ano"]
+            )
+        else:
+            dias_temp = obter_dias_coleta(
+                row=row_temp,
+                mes=aba["mes"],
+                ano=aba["ano"]
+            )
 
-        dias_futuros = [d for d in dias_temp if d >= hoje]
+        dias_futuros = [
+            d for d in dias_temp
+            if d >= hoje
+        ]
 
         if dias_futuros:
             return sorted(dias_futuros)[0]
 
     return None
+
 
 def html_calendario(mes: int, ano: int, dias_destacados: list[int]) -> str:
     cal = calendar.Calendar(firstweekday=6)
