@@ -684,6 +684,31 @@ def obter_dias_coleta(row: pd.Series, mes: int, ano: int) -> list[date]:
     dias = sorted(set(dias))
     return dias
 
+
+def obter_dias_coleta_sc(row: pd.Series, mes: int, ano: int) -> list[date]:
+    dias = []
+
+    for coluna in row.index:
+        data_col = parsear_data_coluna(coluna)
+
+        if not data_col:
+            continue
+
+        if data_col.month != mes or data_col.year != ano:
+            continue
+
+        valor = row[coluna]
+
+        if pd.isna(valor):
+            continue
+
+        if normalizar_texto(valor) == "x":
+            if data_col.weekday() < 5:
+                dias.append(data_col)
+
+    return sorted(set(dias))
+
+
 def obter_horario_coleta(row: pd.Series, data_busca: date) -> str:
     for coluna in row.index:
         data_col = parsear_data_coluna(coluna)
@@ -955,6 +980,29 @@ if st.query_params.get("teste_sc") == "1":
                     df_sc_teste.iloc[:5, :8],
                     use_container_width=True
                 )
+                
+                # Teste das datas de coleta de SC
+                cidade_teste = cidades_sc[0]
+
+                row_teste = encontrar_linha_cidade(
+                    df_sc_teste,
+                    coluna_cidade_sc,
+                    cidade_teste
+                )
+
+                dias_teste = obter_dias_coleta_sc(
+                    row_teste,
+                    ultima_aba["mes"],
+                    ultima_aba["ano"]
+                )
+
+                st.subheader(f"🚚 Coletas de {cidade_teste}")
+
+                for dia in dias_teste:
+                    st.write(
+                        f"✅ {dia.strftime('%d/%m/%Y')} - {dia_semana_pt(dia)}"
+                    )
+
 
             else:
                 st.error("Coluna CIDADE não encontrada em SC.")
